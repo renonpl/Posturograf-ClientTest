@@ -9,12 +9,21 @@ public class Client : MonoBehaviour
 {
 
     private static SubscriberSocket client;
-    private static void StartClient()
+    private Vector2 data;
+    public Vector2 Data { get => data; }
+
+
+    /*
+     * Server has to work when game is running!
+     * The server must work when the game is running,
+     * otherwise game will freeze!
+     */
+    private static void StartClient(string server_address = "127.0.0.1", int port = 5556)
     {
         try
         {
             client = new SubscriberSocket();
-            string connect_to = "tcp://127.0.0.1:5556";
+            string connect_to = "tcp://"+ server_address +":" + port.ToString();
             client.Connect(connect_to);
             client.Subscribe("");
         }
@@ -23,25 +32,37 @@ public class Client : MonoBehaviour
             //Console.WriteLine(e.ToString());
             Debug.Log(e.ToString());
         }
+        Debug.Log("Server connected!");
     }
 
-    private static string ReadData()
+    private static void ReadData()
     {
-        string reply = client.ReceiveFrameString();
-        Debug.Log("> " + reply);
-        //Console.WriteLine("> " + reply);
-        return reply;
+        byte[] bytes;
+        if (client.TryReceiveFrameBytes(out bytes))
+        {
+            //TODO: konwersja z bytes do Vectora liczb
+            Debug.Log("");
+            //Console.WriteLine("> " + reply);
+        }
     }
 
-    // Start is called before the first frame update
     void Start()
     {
         StartClient();
     }
 
+    
+
+
     // Update is called once per frame
-    void Update()
+    void LateUpdate()
     {
         ReadData();
+    }
+
+    private void OnDestroy()
+    {
+        client.Dispose();
+        NetMQConfig.Cleanup();
     }
 }
